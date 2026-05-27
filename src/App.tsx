@@ -62,6 +62,16 @@ const INITIAL_STOCKS: Stock[] = [
   {id:15,  n:"LG에너지솔루션",                    c:"373220", yt:"373220.KS", t:"국내주식", sh:221,  bp:494500,    inv:109284500,base:400000,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"한국투자증권"},
   // ── 한국투자증권 (신탁·위탁) ──
   {id:16,  n:"신탁",                              c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:54000000,  inv:54000000, base:70516149, cur:"KRW", ow:"김희연", ac:"위탁",    br:"한국투자증권"},
+  // ── 미래에셋증권 (해외위탁 / 2026-05-27) ──
+  {id:17,  n:"상환전동기",                         c:"-",      yt:"",          t:"해외주식",  sh:1500, bp:38.82,     inv:11205199, base:42.50,   cur:"HKD", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
+  {id:18,  n:"차이나타워",                         c:"0788",   yt:"0788.HK",   t:"해외주식",  sh:100,  bp:10.20,     inv:196279,   base:10.00,   cur:"HKD", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
+  {id:19,  n:"UBTECH ROBOTICS",                  c:"9880",   yt:"9880.HK",   t:"해외주식",  sh:1100, bp:127.10,    inv:26903638, base:117.80,  cur:"HKD", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
+  {id:20,  n:"알파벳 A",                          c:"GOOGL",  yt:"GOOGL",     t:"미국주식",  sh:114,  bp:294.35,    inv:50609443, base:386.94,  cur:"USD", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
+  {id:21,  n:"외화-중국위안(CNY)",                 c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:858043,    inv:858043,   base:858043,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
+  {id:22,  n:"외화-홍콩달러(HKD)",                 c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:529376,    inv:529376,   base:529376,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
+  {id:23,  n:"외화-일본엔(JPY)",                   c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:70548,     inv:70548,    base:70548,   cur:"KRW", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
+  {id:24,  n:"미국달러(USD)",                      c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:307084,    inv:307084,   base:203.65,  cur:"USD", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
+  {id:25,  n:"미래에셋 원화예수금",                 c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:456454,    inv:456454,   base:456454,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
 ];
 
 const TABS = [
@@ -71,7 +81,7 @@ const TABS = [
 ];
 const ACCOUNT_GROUPS = ['위탁', 'ISA', '해외위탁', '연금', 'IRP'];
 const BROKER_GROUPS  = ['한국투자증권', '미래에셋증권', '삼성증권', '키움증권', 'KB증권', 'NH투자증권'];
-const ASSET_TYPES    = ['국내주식', '국내ETF', '미국주식', '미국ETF', '예금/현금'];
+const ASSET_TYPES    = ['국내주식', '국내ETF', '미국주식', '미국ETF', '해외주식', '예금/현금'];
 
 // ──────────────────────────────────────────────────────────────────────────────
 // UTILS
@@ -94,7 +104,7 @@ const getRate    = (cur: string, r: Rates) => cur === 'USD' ? r.USDKRW : cur ===
 const getMetrics = (s: Stock, prices: Prices, rates: Rates): Metrics => {
   let priceKRW = s.base;
   if (s.yt && s.sh > 0 && prices[s.yt]) priceKRW = Math.round(prices[s.yt] * getRate(s.cur, rates));
-  else if (s.cur === 'USD')              priceKRW = Math.round(s.base * getRate(s.cur, rates));
+  else if (s.cur !== 'KRW')              priceKRW = Math.round(s.base * getRate(s.cur, rates));
   if (!s.yt || s.sh === 0) {
     const pnl = priceKRW - s.inv, ret = s.inv > 0 ? (pnl / s.inv) * 100 : 0;
     return { priceKRW, val: priceKRW, pnl, ret };
@@ -114,6 +124,7 @@ const BADGE_COLORS: Record<string, string> = {
   '국내ETF':  'bg-purple-500/10 text-purple-400 border border-purple-500/20',
   '미국주식': 'bg-amber-500/10  text-amber-400  border border-amber-500/20',
   '미국ETF':  'bg-orange-500/10 text-orange-400 border border-orange-500/20',
+  '해외주식': 'bg-cyan-500/10   text-cyan-400   border border-cyan-500/20',
   'ISA':      'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20',
   '위탁':     'bg-slate-700/30  text-slate-300  border border-slate-700/40',
   '해외위탁': 'bg-rose-500/10   text-rose-400   border border-rose-500/20',
@@ -1013,7 +1024,7 @@ export default function App() {
   const [tab, setTab]             = useState('dashboard');
   const [stocks, setStocks]       = useState<Stock[]>([]);
   const [prices, setPrices]       = useState<Prices>({});
-  const [rates, setRates]         = useState<Rates>({ USDKRW: 1513.30, JPYKRW: 9.3, HKDKRW: 177 });
+  const [rates, setRates]         = useState<Rates>({ USDKRW: 1507.90, JPYKRW: 9.47, HKDKRW: 192.43 });
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [loading, setLoading]     = useState(false);
   const [toastMsg, setToastMsg]   = useState<string | null>(null);
@@ -1078,7 +1089,7 @@ export default function App() {
         if (d.rates)  setRates(d.rates);
         if (d.lastUpdated) setLastUpdated(d.lastUpdated);
       } else {
-        setDoc(settingsRef, { prices: {}, rates: { USDKRW: 1513.30, JPYKRW: 9.3, HKDKRW: 177 }, lastUpdated: null });
+        setDoc(settingsRef, { prices: {}, rates: { USDKRW: 1507.90, JPYKRW: 9.47, HKDKRW: 192.43 }, lastUpdated: null });
       }
     }, console.error);
 
