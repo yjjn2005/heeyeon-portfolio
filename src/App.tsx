@@ -35,7 +35,7 @@ interface Metrics { priceKRW: number; val: number; pnl: number; ret: number; }
 // ──────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ──────────────────────────────────────────────────────────────────────────────
-const LOCAL_KEY = 'heeyeon_portfolio_v6_local';
+const LOCAL_KEY = 'heeyeon_portfolio_v7_local';
 const APP_ID    = import.meta.env.VITE_FIREBASE_APP_ID || 'portfolio-default';
 
 const INITIAL_STOCKS: Stock[] = [
@@ -73,7 +73,7 @@ const INITIAL_STOCKS: Stock[] = [
   {id:24,  n:"미국달러(USD)",                      c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:307084,    inv:307084,   base:203.65,  cur:"USD", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
   {id:25,  n:"미래에셋 원화예수금",                 c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:456454,    inv:456454,   base:456454,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
   // ── 유진투자증권 (위탁 / 2026-05-27) ──
-  {id:26,  n:"레인보우로보틱스",                    c:"277810", yt:"277810.KS", t:"국내주식", sh:79,   bp:376500,    inv:29743500, base:376500,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"유진투자증권"},
+  {id:26,  n:"레인보우로보틱스",                    c:"277810", yt:"277810.KQ", t:"국내주식", sh:79,   bp:376500,    inv:29743500, base:376500,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"유진투자증권"},
 ];
 
 const TABS = [
