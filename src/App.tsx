@@ -35,7 +35,7 @@ interface Metrics { priceKRW: number; val: number; pnl: number; ret: number; }
 // ──────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ──────────────────────────────────────────────────────────────────────────────
-const LOCAL_KEY = 'heeyeon_portfolio_v7_local';
+const LOCAL_KEY = 'heeyeon_portfolio_v8_local';
 const APP_ID    = import.meta.env.VITE_FIREBASE_APP_ID || 'portfolio-default';
 
 const INITIAL_STOCKS: Stock[] = [
@@ -73,7 +73,7 @@ const INITIAL_STOCKS: Stock[] = [
   {id:24,  n:"미국달러(USD)",                      c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:307084,    inv:307084,   base:203.65,  cur:"USD", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
   {id:25,  n:"미래에셋 원화예수금",                 c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:456454,    inv:456454,   base:456454,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
   // ── 유진투자증권 (위탁 / 2026-05-27) ──
-  {id:26,  n:"레인보우로보틱스",                    c:"277810", yt:"277810.KQ", t:"국내주식", sh:79,   bp:376500,    inv:29743500, base:376500,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"유진투자증권"},
+  {id:26,  n:"레인보우로보틱스",                    c:"277810", yt:"277810.KQ", t:"국내주식", sh:79,   bp:376500,    inv:29743500, base:741000,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"유진투자증권"},
 ];
 
 const TABS = [
@@ -939,6 +939,7 @@ const StockModal = ({
             <h3 className="text-lg font-black text-white">{editingStock ? `${editingStock.n} 수정` : '새 자산 추가'}</h3>
             <button onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:bg-slate-700 rounded-full transition-colors"><X size={22}/></button>
           </div>
+          {isNew && (
           <div className="flex px-5 pb-4 gap-2">
             <button onClick={() => setMode('quick')} className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all flex justify-center items-center gap-1.5 ${mode === 'quick' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
               <Zap size={14}/> 빠른 입력
@@ -947,6 +948,7 @@ const StockModal = ({
               상세 입력
             </button>
           </div>
+          )}
         </div>
 
         <div className="p-5 space-y-4 flex-1">
@@ -1127,10 +1129,22 @@ export default function App() {
 
   // Price sync — works with or without Firebase
   const fetchTicker = async (ticker: string): Promise<number | null> => {
+    // 한국 주식: Naver Finance API (CORS 허용, 안정적)
+    if (ticker.endsWith('.KS') || ticker.endsWith('.KQ')) {
+      const code = ticker.replace(/\.(KS|KQ)$/, '');
+      try {
+        const r = await fetch(`https://m.stock.naver.com/api/stock/${code}/basic`, { signal: AbortSignal.timeout(8000) });
+        if (r.ok) {
+          const d = await r.json();
+          const p = Number(String(d?.closePrice ?? '').replace(/,/g, ''));
+          if (p) return p;
+        }
+      } catch {}
+    }
+    // 미국/HK 주식: Yahoo Finance via CORS proxy
     const proxies = [
       `https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`)}`,
       `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d`)}`,
-      `https://thingproxy.freeboard.io/fetch/https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d`,
     ];
     for (const url of proxies) {
       try {
@@ -1148,18 +1162,26 @@ export default function App() {
     if (loading) return;
     setLoading(true);
     try {
-      const tickers    = [...new Set(stocks.filter(s => s.yt && s.sh > 0).map(s => s.yt))];
-      const newPrices  = { ...prices };
-      const newRates   = { ...rates };
+      const tickers   = [...new Set(stocks.filter(s => s.yt && s.sh > 0).map(s => s.yt))];
+      const newPrices = { ...prices };
+      const newRates  = { ...rates };
       for (let i = 0; i < tickers.length; i += 5) {
         await Promise.all(tickers.slice(i, i + 5).map(async t => {
           const p = await fetchTicker(t); if (p) newPrices[t] = p;
         }));
       }
-      await Promise.all(
-        ([['USDKRW','USDKRW=X'],['JPYKRW','JPYKRW=X'],['HKDKRW','HKDKRW=X']] as [keyof Rates, string][])
-          .map(async ([key, t]) => { const p = await fetchTicker(t); if (p) newRates[key] = p; })
-      );
+      // 환율: open.er-api.com (CORS 허용, 안정적)
+      try {
+        const r = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(8000) });
+        if (r.ok) {
+          const d = await r.json();
+          if (d.rates?.KRW) {
+            newRates.USDKRW = Math.round(d.rates.KRW * 100) / 100;
+            if (d.rates.JPY) newRates.JPYKRW = Math.round(d.rates.KRW / d.rates.JPY * 100) / 100;
+            if (d.rates.HKD) newRates.HKDKRW = Math.round(d.rates.KRW / d.rates.HKD * 100) / 100;
+          }
+        }
+      } catch {}
       await saveSettingsToCloud(newPrices, newRates, new Date().toISOString());
       showToast('시세 및 환율 업데이트 완료');
     } catch { showToast('업데이트 중 오류 발생'); }
