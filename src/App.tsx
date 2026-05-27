@@ -35,7 +35,7 @@ interface Metrics { priceKRW: number; val: number; pnl: number; ret: number; }
 // ──────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ──────────────────────────────────────────────────────────────────────────────
-const LOCAL_KEY = 'heeyeon_portfolio_v5_local';
+const LOCAL_KEY = 'heeyeon_portfolio_v6_local';
 const APP_ID    = import.meta.env.VITE_FIREBASE_APP_ID || 'portfolio-default';
 
 const INITIAL_STOCKS: Stock[] = [
