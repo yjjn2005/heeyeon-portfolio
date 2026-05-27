@@ -72,6 +72,8 @@ const INITIAL_STOCKS: Stock[] = [
   {id:23,  n:"외화-일본엔(JPY)",                   c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:70548,     inv:70548,    base:70548,   cur:"KRW", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
   {id:24,  n:"미국달러(USD)",                      c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:307084,    inv:307084,   base:203.65,  cur:"USD", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
   {id:25,  n:"미래에셋 원화예수금",                 c:"-",      yt:"",          t:"예금/현금", sh:0,    bp:456454,    inv:456454,   base:456454,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"미래에셋증권"},
+  // ── 유진투자증권 (위탁 / 2026-05-27) ──
+  {id:26,  n:"레인보우로보틱스",                    c:"277810", yt:"277810.KS", t:"국내주식", sh:79,   bp:376500,    inv:29743500, base:376500,  cur:"KRW", ow:"김희연", ac:"위탁",    br:"유진투자증권"},
 ];
 
 const TABS = [
@@ -80,7 +82,7 @@ const TABS = [
   { id: 'settings',  label: '설정',      icon: Settings },
 ];
 const ACCOUNT_GROUPS = ['위탁', 'ISA', '해외위탁', '연금', 'IRP'];
-const BROKER_GROUPS  = ['한국투자증권', '미래에셋증권', '삼성증권', '키움증권', 'KB증권', 'NH투자증권'];
+const BROKER_GROUPS  = ['한국투자증권', '미래에셋증권', '유진투자증권', '삼성증권', '키움증권', 'KB증권', 'NH투자증권'];
 const ASSET_TYPES    = ['국내주식', '국내ETF', '미국주식', '미국ETF', '해외주식', '예금/현금'];
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -218,6 +220,7 @@ const DashboardView = ({
     '미래에셋증권': { icon: 'bg-orange-500/10 text-orange-400 border border-orange-500/20', bar: 'bg-orange-500', hex: '#f97316' },
     '삼성증권':    { icon: 'bg-indigo-500/10  text-indigo-400 border border-indigo-500/20', bar: 'bg-indigo-500', hex: '#818cf8' },
     '한국투자증권': { icon: 'bg-blue-500/10    text-blue-400   border border-blue-500/20',   bar: 'bg-blue-400',  hex: '#60a5fa' },
+    '유진투자증권': { icon: 'bg-violet-500/10  text-violet-400 border border-violet-500/20', bar: 'bg-violet-500', hex: '#8b5cf6' },
   };
 
   const accounts = ACCOUNT_GROUPS
